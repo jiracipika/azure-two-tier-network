@@ -5,8 +5,13 @@
 ## Goal
 Demonstrate permitted web traffic while rejecting unauthorized app and SSH traffic.
 
-## Planned Azure architecture
-VNet, web/app subnet isolation, Nginx VMs, Azure Load Balancer, Bastion, NAT and NSGs.
+## Architecture (implemented as code, gated off)
+Public Load Balancer → two Nginx web VMs in `snet-web` → one private API VM
+in `snet-app`; Azure Bastion as the only management path; NAT gateway as the
+only egress; per-subnet NSGs enforce the tier boundaries. Proven offline by a
+flow simulator that replays the real NSG rule matrix (allow: Internet→web:80,
+web→app:8080, bastion→workloads:22; deny: Internet→app on any port,
+Internet→SSH anywhere, lateral app↔app).
 
 ## GLM / ZCode — start here
 
@@ -25,19 +30,27 @@ terraform -chdir=infra/terraform init -backend=false -input=false
 terraform -chdir=infra/terraform validate
 ```
 
+All four pass locally (34 tests) and in CI; see docs/VALIDATION.md for the
+real output log, including the failures that were found and fixed.
+
 ## Source contents
 
 - `AGENTS.md`: enforceable GLM implementation contract
-- `docs/GLM_TASKS.md`: project-specific milestones
-- `docs/ARCHITECTURE.md`: intended topology and assumptions
-- `docs/SECURITY.md` / `docs/COSTS.md`: guardrails and financial control
-- `docs/VALIDATION.md`: log real evidence only
-- `docs/TEARDOWN.md`: future approved cleanup plan
-- `diagrams/architecture.mmd`: initial editable Mermaid model
-- `infra/terraform/`: safe offline provider root, no billable resources declared
+- `docs/GLM_TASKS.md`: project-specific milestones and current status
+- `docs/ARCHITECTURE.md`: topology, CIDR/NSG matrix, trust boundaries, flaws considered
+- `docs/SECURITY.md` / `docs/COSTS.md`: controls, guardrails, cost estimate (~$240/mo if deployed)
+- `docs/VALIDATION.md`: real evidence only — actual commands and results
+- `docs/TEARDOWN.md`: resource inventory + approved cleanup plan
+- `diagrams/architecture.mmd`: editable Mermaid model with trust boundaries
+- `infra/terraform/`: root module + `modules/hub_network`, `modules/bastion`, `modules/web_tier`, `modules/app_tier`; everything gated by `deploy_enabled=false`
+- `infra/terraform/environments/dev.tfvars`: offline-safe defaults
 - `.github/workflows/validate.yml`: offline validation, no deploy step
-- `tests/`: initial safety regression tests
+- `tests/`: safety gates, security invariants and the NSG flow simulator
 
 ## Status and safety
 
-This is an initial engineering scaffold, **not** a deployed production system. Terraform currently defines no Azure services. The architecture modules, end-to-end tests and production readiness must be implemented and verified in subsequent GLM work. **Repository visibility must remain PRIVATE.** No credentials, secrets, real customer data, Terraform state or internal account identifiers may be committed.
+Terraform modules for the full two-tier topology are implemented and
+validated offline; **no Azure services are deployed** and `terraform plan`
+with defaults proposes zero resources. Repository visibility must remain
+**PRIVATE**. No credentials, secrets, real customer data, Terraform state or
+internal account identifiers may be committed.

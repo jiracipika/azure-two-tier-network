@@ -3,8 +3,10 @@
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
+!**/environments/*.tfvars
 *.tfplan
 .env
 *.pem
 *.key
 __pycache__/
+.mimosa/

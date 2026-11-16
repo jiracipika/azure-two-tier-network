@@ -1,5 +1,36 @@
 flowchart LR
-  U[Users] --> A[Two-Tier VNet and Bastion]
-  A --> C[Public load balancer -> two Nginx web VMs in subnet web -> one private API VM in app subnet; Bastion, NSG]
-  C --> M[Monitoring and validation]
-  GH[GitHub Actions offline checks] --> M
+  subgraph Internet["Trust boundary: Public Internet"]
+    U[Users]
+    A[Attacker / untrusted]
+  end
+
+  subgraph VNet["vnet-two-tier 10.10.0.0/16"]
+    subgraph Web["snet-web 10.10.1.0/24 - NSG web"]
+      LB[Public Load Balancer :80]
+      W0[vm-web-0 nginx]
+      W1[vm-web-1 nginx]
+    end
+    subgraph App["snet-app 10.10.2.0/24 - NSG app"]
+      API[vm-app-0 nginx :8080]
+    end
+    subgraph BastionSub["AzureBastionSubnet 10.10.250.0/26 - NSG bastion"]
+      BAST[Bastion host :443]
+    end
+    NAT[NAT gateway - egress only]
+  end
+
+  U -- "TCP 80 (allowed)" --> LB
+  LB -- "probe + forward :80" --> W0
+  LB -- "probe + forward :80" --> W1
+  W0 -- "TCP 8080 (only from snet-web)" --> API
+  W1 -- "TCP 8080" --> API
+  U -- "TCP 443 (TLS session)" --> BAST
+  BAST -. "SSH 22 to workloads only" .-> W0
+  BAST -. "SSH 22" .-> API
+  A -- "any port 22/3389/8080 - DENIED" --x App
+  A -- "port 22/3389 - DENIED" --x Web
+  Web -- "default_outbound disabled; NAT only" --> NAT
+  App -- "default_outbound disabled; NAT only" --> NAT
+  NAT -- "SNAT" --> Internet
+
+  GH[GitHub Actions offline checks] -. "validate only, no deploy" .- VNet
