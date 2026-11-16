@@ -1,0 +1,3 @@
+# GLM / ZCode engineering contract — Two-Tier VNet and Bastion
+
+Read README.md and docs/GLM_TASKS.md before editing. Repo visibility: **PRIVATE**; never change it. Implement actual offline-testable architecture with reusable modules, local demos, negative security tests, docs and diagrams. Verify all Azure provider versions/SKUs against official docs. Run test suite and log actual evidence. No automatic Terraform apply/destroy, no paid Azure resources or account changes without itemized cost approval. Prefer OIDC to secrets. Keep PRs reviewable; never claim deployment without proof. Use GLM subagents if available, with one integrating lead.

@@ -1,0 +1,5 @@
+flowchart LR
+  U[Users] --> A[Two-Tier VNet and Bastion]
+  A --> C[Public load balancer -> two Nginx web VMs in subnet web -> one private API VM in app subnet; Bastion, NSG]
+  C --> M[Monitoring and validation]
+  GH[GitHub Actions offline checks] --> M
