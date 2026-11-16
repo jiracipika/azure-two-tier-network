@@ -51,4 +51,4 @@ GitHub Actions: run status recorded below after pushing this commit.
 |---|---|---|
 | 2026-11-16T13:23Z | 43875285702 (scaffold) | failure — `fmt -check` exit 3 |
 | 2026-11-16T13:26Z | 43875757705 (scaffold) | failure — `fmt -check` exit 3 |
-| 2026-11-16T14:2xZ | (implementation push) | recorded after CI completes |
+| 2026-11-16T14:20Z | 43884259073 (implementation, commit 7d1ccb5) | **success — 34 tests + fmt + init + validate green on ubuntu runner / terraform 1.10.5** |
